@@ -1,0 +1,24 @@
+CUDA Vector Operators
+=====================
+
+Current state: probably doesn't even compile correctly yet.
+
+Sometimes you just want to do basic operations on CUDA's builtin vector types.
+
+This is a header file providing basic operator overloads for builtin vectors. It allows you to write expression such as:
+
+float4 a ...
+float4 b ...
+float4 c = a * b
+
+The operands can be be a mix of vector or scalar quantities.
+
+It's similar to what you'd get from OpenCL.
+
+The header file is generated from a Ruby script, don't modify the header directly.
+
+
+TODO:
+ - Math functions (sin,cos etc)
+ - Some tests
+ 
