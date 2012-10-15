@@ -29,7 +29,7 @@ def gen_comps(n, &block)
   end
 end
 
-def gen_binop(types, op)
+def gen_binop(types, op, with_assignment=true)
   types.each do |t|
     scalar, n = t.match(/([a-z]+)([0-9])/)[1..2]
     n = n.to_i
@@ -61,22 +61,23 @@ def gen_binop(types, op)
     puts "}"
     puts ""
 
+    if with_assignment
+      # vec op= vec
+      puts "#{DECL} #{t} & operator #{op}= (#{t} & a, const #{t} & b)"
+      puts "{"
+      comps(n).each { |c| puts "    a.#{c} #{op}= b.#{c};" }
+      puts "    return a;"
+      puts "}"
+      puts ""
 
-    # vec op= vec
-    puts "#{DECL} #{t} & operator #{op}= (#{t} & a, const #{t} & b)"
-    puts "{"
-    comps(n).each { |c| puts "    a.#{c} #{op}= b.#{c};" }
-    puts "    return a;"
-    puts "}"
-    puts ""
-
-    # vec op= scalar
-    puts "#{DECL} #{t} & operator #{op}= (#{t} & a, const #{scalar} & b)"
-    puts "{"
-    comps(n).each { |c| puts "    a.#{c} #{op}= b;" }
-    puts "    return a;"
-    puts "}"
-    puts ""
+      # vec op= scalar
+      puts "#{DECL} #{t} & operator #{op}= (#{t} & a, const #{scalar} & b)"
+      puts "{"
+      comps(n).each { |c| puts "    a.#{c} #{op}= b;" }
+      puts "    return a;"
+      puts "}"
+      puts ""
+    end
   end
 end
 
@@ -132,8 +133,38 @@ def gen_relop(types, op)
   end
 end
 
-puts "#pragma once"
-puts ""
+def gen_unfn(types, name)
+  types.each do |t|
+    scalar, n = t.match(/([a-z]+)([0-9])/)[1..2]
+    n = n.to_i
+
+    # op vec
+    puts "#{DECL} #{t} #{name}(const #{t} & a)"
+    puts "{"
+    print "    return make_#{t}("
+    gen_comps(n) { |c| "#{name}(a.#{c})" }
+    puts ");"
+    puts "}"
+    puts ""
+  end
+end
+
+puts <<HERE
+#pragma once
+
+typedef unsigned char uchar;
+
+#{DECL} float fract(const float x)
+{
+  return x - floorf(x);
+}
+
+#{DECL} double fract(const double x)
+{
+  return x - floor(x);
+}
+
+HERE
 
 gen_unop(TYPES,  "-")
 gen_unop(ITYPES, "~")
@@ -150,8 +181,8 @@ gen_binop(ITYPES, "^")
 gen_binop(ITYPES, "<<")
 gen_binop(ITYPES, ">>")
 
-gen_binop(ITYPES, "&&")
-gen_binop(ITYPES, "||")
+gen_binop(ITYPES, "&&", false)
+gen_binop(ITYPES, "||", false)
 
 gen_relop(ITYPES, "==")
 gen_relop(ITYPES, "!=")
@@ -160,4 +191,6 @@ gen_relop(ITYPES, "<")
 gen_relop(ITYPES, ">=")
 gen_relop(ITYPES, "<=")
 
+
+gen_unfn(FTYPES, "fract")
 

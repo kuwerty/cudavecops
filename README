@@ -1,8 +1,6 @@
 CUDA Vector Operators
 =====================
 
-Current state: probably doesn't even compile correctly yet.
-
 Sometimes you just want to do basic operations on CUDA's builtin vector types.
 
 This is a header file providing basic operator overloads for builtin vectors. It allows you to write expression such as:
